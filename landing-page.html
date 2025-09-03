@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product Redirect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+
+  <!-- Container -->
+  <div class="bg-white shadow-lg rounded-2xl p-6 max-w-sm text-center">
+    <img id="productImg" src="" alt="Product Image" class="w-40 h-40 object-contain mx-auto mb-4" onerror="this.style.display='none'; document.getElementById('noImage').style.display='block';" />
+    <div id="noImage" style="display:none;" class="w-40 h-40 bg-gray-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
+      <span class="text-gray-500 text-sm">No Image</span>
+    </div>
+    <h1 id="productTitle" class="text-lg font-semibold mb-2">Loading...</h1>
+    <p id="productPrice" class="text-green-600 font-bold mb-4"></p>
+
+    <a id="amazonLink" href="#" target="_blank" 
+       class="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded-xl font-semibold shadow">
+      View on Amazon
+    </a>
+
+    <!-- Debug info (remove in production) -->
+    <div id="debugInfo" class="mt-4 text-xs text-gray-400" style="display:none;">
+      <p>ASIN: <span id="debugAsin"></span></p>
+      <p>Market: <span id="debugMarket"></span></p>
+      <p>Image: <span id="debugImg"></span></p>
+    </div>
+
+    <!-- Disclosure -->
+    <p class="mt-4 text-xs text-gray-500">
+      As an Amazon Associate I earn from qualifying purchases.
+    </p>
+  </div>
+
+  <script>
+    // Helper: get query params
+    function getParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    // Debug mode - show debug info if URL has debug=1
+    const debugMode = getParam("debug") === "1";
+    if (debugMode) {
+      document.getElementById("debugInfo").style.display = "block";
+    }
+
+    // Extract product data from URL
+    const asin = getParam("asin");
+    const title = getParam("title") || "Product";
+    const img = getParam("img");
+    const price = getParam("price");
+    const market = getParam("market") || "amazon.com";
+    const originalUrl = getParam("originalUrl");
+
+    // Your Amazon Associate IDs
+    const affiliateTags = {
+      "amazon.com": "priceguard0f-20",
+      "amazon.co.uk": "priceguard0b-21",
+      "amazon.de": "priceguard0c-21",
+      "amazon.fr": "priceguard01-21",
+      "amazon.es": "priceguard0cc-21",
+      "amazon.it": "priceguard09-21"
+    };
+
+    // Marketplace base URLs
+    const amazonDomains = {
+      "amazon.com": "https://www.amazon.com/dp/",
+      "amazon.co.uk": "https://www.amazon.co.uk/dp/",
+      "amazon.de": "https://www.amazon.de/dp/",
+      "amazon.fr": "https://www.amazon.fr/dp/",
+      "amazon.es": "https://www.amazon.es/dp/",
+      "amazon.it": "https://www.amazon.it/dp/"
+    };
+
+    // Fill in content
+    if (title) {
+      document.getElementById("productTitle").innerText = decodeURIComponent(title);
+    }
+    
+    if (img) {
+      const imgSrc = decodeURIComponent(img);
+      document.getElementById("productImg").src = imgSrc;
+      if (debugMode) {
+        document.getElementById("debugImg").innerText = imgSrc;
+      }
+    }
+    
+    if (price) {
+      document.getElementById("productPrice").innerText = decodeURIComponent(price);
+    }
+
+    // Build affiliate link
+    let amazonUrl = "#";
+    
+    if (asin && amazonDomains[market]) {
+      // Use ASIN-based affiliate link
+      amazonUrl = `${amazonDomains[market]}${asin}?tag=${affiliateTags[market]}`;
+    } else if (originalUrl) {
+      // Fallback to original URL with affiliate tag
+      const originalUrlDecoded = decodeURIComponent(originalUrl);
+      const separator = originalUrlDecoded.includes('?') ? '&' : '?';
+      amazonUrl = `${originalUrlDecoded}${separator}tag=${affiliateTags[market]}`;
+    }
+    
+    document.getElementById("amazonLink").href = amazonUrl;
+    
+    // Debug info
+    if (debugMode) {
+      document.getElementById("debugAsin").innerText = asin || "None";
+      document.getElementById("debugMarket").innerText = market;
+    }
+
+    // Log for debugging
+    console.log("Landing page loaded with:", {
+      asin: asin,
+      title: title,
+      img: img,
+      price: price,
+      market: market,
+      originalUrl: originalUrl,
+      finalAmazonUrl: amazonUrl
+    });
+  </script>
+</body>
+</html>
